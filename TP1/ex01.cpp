@@ -6,6 +6,8 @@
 #include <glimac/FilePath.hpp>
 #include <glimac/Program.hpp>
 
+// TRIANGLE
+
 int window_width = 1000;
 int window_height = 700;
 
