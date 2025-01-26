@@ -100,8 +100,9 @@ int main(int argc, char* argv[])
     program.use();
 
     // uniforms
-    GLint  location_uTime        = glGetUniformLocation(program.getGLId(), "uTime");
+
     GLuint location_uModelMatrix = glGetUniformLocation(program.getGLId(), "uModelMatrix");
+    GLuint location_uColor       = glGetUniformLocation(program.getGLId(), "uColor");
 
     /* Hook input callbacks */
     glfwSetKeyCallback(window, &key_callback);
@@ -153,14 +154,18 @@ int main(int argc, char* argv[])
     while (!glfwWindowShouldClose(window))
     {
         elapsedTime += 0.1f;
-        glUniform1f(location_uTime, elapsedTime);
-        glUniformMatrix3fv(location_uModelMatrix, 1, GL_FALSE, glm::value_ptr(rotate(elapsedTime)));
+
         //
         glClear(GL_COLOR_BUFFER_BIT);
         /*********************************
          * HERE SHOULD COME THE RENDERING CODE
          *********************************/
         glBindVertexArray(vao);
+        glUniform3fv(location_uColor, 1, glm::value_ptr(glm::vec3(1, 0, 0)));
+        glUniformMatrix3fv(location_uModelMatrix, 1, GL_FALSE, glm::value_ptr(scale(0.2, 0.2) * translate(1.0, 1.0) * rotate(elapsedTime)));
+        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+        glUniform3fv(location_uColor, 1, glm::value_ptr(glm::vec3(0, 0, 1)));
+        glUniformMatrix3fv(location_uModelMatrix, 1, GL_FALSE, glm::value_ptr(scale(0.2, 0.2) * translate(-1.0, -1.0) * rotate(-elapsedTime)));
         glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 

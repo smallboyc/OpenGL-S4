@@ -5,11 +5,11 @@ layout(location = 1) in vec2 aVertexTexture;
 
 out vec3 vFragColor;
 
-uniform float uTime = 45;
 uniform mat3 uModelMatrix;
+uniform vec3 uColor;
 
 void main() {
-    vFragColor = vec3(1, 0, 0);
+    vFragColor = uColor;
     vec2 eVertexPosition = (uModelMatrix * vec3(aVertexPosition, 1)).xy;
     gl_Position = vec4(eVertexPosition, 0, 1);
 }
