@@ -1,4 +1,6 @@
 #include <glm/glm.hpp>
+#include <memory>
+#include "glimac/Image.hpp"
 #include "glm/fwd.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
@@ -8,19 +10,10 @@
 #include <glimac/FilePath.hpp>
 #include <glimac/Program.hpp>
 
-// 2 triangles rotating
+// Texture !
 
-int   window_width  = 1000;
-int   window_height = 700;
-float elapsedTime   = 0.0f;
-
-static void key_callback(GLFWwindow* /*window*/, int /*key*/, int /*scancode*/, int /*action*/, int /*mods*/) {}
-
-static void mouse_button_callback(GLFWwindow* /*window*/, int /*button*/, int /*action*/, int /*mods*/) {}
-
-static void scroll_callback(GLFWwindow* /*window*/, double /*xoffset*/, double /*yoffset*/) {}
-
-static void cursor_position_callback(GLFWwindow* /*window*/, double /*xpos*/, double /*ypos*/) {}
+int window_width  = 1000;
+int window_height = 700;
 
 static void size_callback(GLFWwindow* /*window*/, int width, int height)
 {
@@ -35,24 +28,6 @@ struct Vertex2DUV {
     glm::vec2 m_position;
     glm::vec2 m_texture;
 };
-
-glm::mat3 translate(float tx, float ty)
-{
-    return glm::mat3(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(tx, ty, 1));
-}
-
-glm::mat3 scale(float sx, float sy)
-{
-    return glm::mat3(glm::vec3(sx, 0, 0), glm::vec3(0, sy, 0), glm::vec3(0, 0, 1));
-}
-
-glm::mat3 rotate(float angle_deg)
-{
-    float angle_rad = glm::radians(angle_deg);
-    return glm::mat3(glm::vec3(cos(angle_rad), sin(angle_rad), 0), glm::vec3(-sin(angle_rad), cos(angle_rad), 0), glm::vec3(0, 0, 1));
-}
-
-//-----------------------------//
 
 int main(int argc, char* argv[])
 {
@@ -86,7 +61,9 @@ int main(int argc, char* argv[])
     {
         return -1;
     }
-
+    std::unique_ptr<glimac::Image> image = glimac::loadImage("assets/images/cat.png");
+    if (image == nullptr)
+        std::cerr << "fail to load image." << "\n";
     glimac::FilePath applicationPath(argv[0]);
     //  easier to stay at root folder and run following commands
     //  - compile with make -C build
@@ -99,28 +76,31 @@ int main(int argc, char* argv[])
         loadProgram(applicationPath.dirPath() + "TP2/shaders/" + argv[1], applicationPath.dirPath() + "TP2/shaders/" + argv[2]);
     program.use();
 
-    // uniforms
-
-    GLuint location_uModelMatrix = glGetUniformLocation(program.getGLId(), "uModelMatrix");
-    GLuint location_uColor       = glGetUniformLocation(program.getGLId(), "uColor");
-
     /* Hook input callbacks */
-    glfwSetKeyCallback(window, &key_callback);
-    glfwSetMouseButtonCallback(window, &mouse_button_callback);
-    glfwSetScrollCallback(window, &scroll_callback);
-    glfwSetCursorPosCallback(window, &cursor_position_callback);
     glfwSetWindowSizeCallback(window, &size_callback);
 
     /*********************************
      * HERE SHOULD COME THE INITIALIZATION CODE
      *********************************/
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->getWidth(), image->getHeight(), 0, GL_RGBA, GL_FLOAT, image->getPixels());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    GLuint tex0 = glGetUniformLocation(program.getGLId(), "uTexture");
+    glUniform1i(tex0, 0);
+
+    //
     GLuint vbo;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     Vertex2DUV vertices[] = {
-        Vertex2DUV(glm::vec2(-1, -1), glm::vec2(0, 0)),
-        Vertex2DUV(glm::vec2(1, -1), glm::vec2(0, 0)),
-        Vertex2DUV(glm::vec2(0, 1), glm::vec2(0, 0)),
+        Vertex2DUV(glm::vec2(-0.5, -0.5), glm::vec2(0, 1)),
+        Vertex2DUV(glm::vec2(0.5, -0.5), glm::vec2(1, 1)),
+        Vertex2DUV(glm::vec2(0.5, 0.5), glm::vec2(1, 0)),
+        Vertex2DUV(glm::vec2(-0.5, 0.5), glm::vec2(0, 0)),
     };
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -131,6 +111,9 @@ int main(int argc, char* argv[])
     glm::uint32_t index[] = {
         0,
         1,
+        2,
+        0,
+        3,
         2,
     };
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index), index, GL_STATIC_DRAW);
@@ -153,20 +136,15 @@ int main(int argc, char* argv[])
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        elapsedTime += 0.1f;
-
         //
         glClear(GL_COLOR_BUFFER_BIT);
         /*********************************
          * HERE SHOULD COME THE RENDERING CODE
          *********************************/
         glBindVertexArray(vao);
-        glUniform3fv(location_uColor, 1, glm::value_ptr(glm::vec3(1, 0, 0)));
-        glUniformMatrix3fv(location_uModelMatrix, 1, GL_FALSE, glm::value_ptr(scale(0.2, 0.2) * translate(1.0, 1.0) * rotate(elapsedTime)));
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-        glUniform3fv(location_uColor, 1, glm::value_ptr(glm::vec3(0, 0, 1)));
-        glUniformMatrix3fv(location_uModelMatrix, 1, GL_FALSE, glm::value_ptr(scale(0.2, 0.2) * translate(-1.0, -1.0) * rotate(-elapsedTime)));
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
         glBindVertexArray(0);
 
         /* Swap front and back buffers */
@@ -177,6 +155,7 @@ int main(int argc, char* argv[])
 
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &vao);
+    glDeleteTextures(1, &texture);
     glfwTerminate();
     return 0;
 }
