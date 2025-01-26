@@ -21,6 +21,7 @@ mat3 rotate(float angle_deg) {
 void main() {
     vFragColor = aVertexColor;
     // vec2 eVertexPosition = (translate(0.5, 0.5) * vec3(aVertexPosition, 1)).xy;
-    vec2 eVertexPosition = (translate(0.5, 0.5) * vec3(aVertexPosition, 1)).xy;
+    //scale, then translate, then rotate, then translate :
+    vec2 eVertexPosition = (scale(0.25, 0.25) * translate(2, 0.0) * rotate(45) * translate(0, 3) * vec3(aVertexPosition, 1)).xy;
     gl_Position = vec4(eVertexPosition, 0, 1);
 }

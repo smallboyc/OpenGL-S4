@@ -93,10 +93,10 @@ int main(int argc, char* argv[])
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     Vertex2DColor vertices[] = {
-        Vertex2DColor(glm::vec2(-0.5, -0.5), glm::vec3(1, 0, 0)),
-        Vertex2DColor(glm::vec2(0.5, -0.5), glm::vec3(0, 1, 0)),
-        Vertex2DColor(glm::vec2(0, 0.5), glm::vec3(0, 0, 1)),
-        Vertex2DColor(glm::vec2(0.5, 0.5), glm::vec3(0, 0, 1)),
+        Vertex2DColor(glm::vec2(-0.5, -0.5), glm::vec3(0, 0, 1)),
+        Vertex2DColor(glm::vec2(0.5, -0.5), glm::vec3(0, 0.5, 0.5)),
+        Vertex2DColor(glm::vec2(-0.5, 0.5), glm::vec3(0, 0, 1)),
+        Vertex2DColor(glm::vec2(0.5, 0.5), glm::vec3(0, 0.5, 0.5)),
     };
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -104,7 +104,14 @@ int main(int argc, char* argv[])
     GLuint ibo;
     glGenBuffers(1, &ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glm::uint32_t index[] = {0, 1, 3};
+    glm::uint32_t index[] = {
+        0,
+        1,
+        2,
+        1,
+        3,
+        2,
+    };
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index), index, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     //
@@ -128,7 +135,7 @@ int main(int argc, char* argv[])
          * HERE SHOULD COME THE RENDERING CODE
          *********************************/
         glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         /* Swap front and back buffers */
