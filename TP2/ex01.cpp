@@ -7,7 +7,7 @@
 #include <glimac/FilePath.hpp>
 #include <glimac/Program.hpp>
 
-// TRIANGLE
+// QUAD & transformations
 
 int window_width  = 1000;
 int window_height = 700;
